@@ -127,7 +127,7 @@
                             <p class="text-sm font-semibold text-gray-800">每次抽奖消耗 <span id="lottery-cost-text" class="text-purple-600">50</span> 积分</p>
                             <p class="text-xs text-gray-400 mt-1">积分越多，惊喜越多</p>
                         </div>
-                        <button onclick="showMessage('将弹出抽奖半屏弹窗或跳转子页')" class="shrink-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-6 py-2.5 rounded-full text-sm font-bold shadow-md shadow-purple-200 active:scale-95 transition-transform">
+                        <button onclick="startLottery()" class="shrink-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-6 py-2.5 rounded-full text-sm font-bold shadow-md shadow-purple-200 active:scale-95 transition-transform">
                             立即抽奖
                         </button>
                     </div>
@@ -208,6 +208,32 @@
                     很遗憾猜错了<br>再接再厉哦！
                 </p>
                 <button onclick="closeModal()" class="w-full bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200">我知道了</button>
+            </div>
+
+            <!-- 弹窗: 抽奖中奖 -->
+            <div id="modal-lottery-win" class="hidden bg-white w-full max-w-xs rounded-2xl p-6 shadow-xl flex-col items-center fade-in">
+                <div class="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mb-4">
+                    <i data-lucide="gift" class="w-9 h-9 text-yellow-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2 text-center">恭喜中奖</h3>
+                <div id="lottery-win-prize" class="w-full bg-yellow-50 border border-yellow-100 rounded-xl p-4 text-center mb-4">
+                    <!-- 中奖奖品动态注入 -->
+                </div>
+                <p class="text-sm text-gray-500 text-center mb-6">奖品已记录，请以后续发放通知为准</p>
+                <button onclick="closeModal()" class="w-full bg-yellow-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-yellow-100">开心收下</button>
+            </div>
+
+            <!-- 弹窗: 抽奖未中奖 -->
+            <div id="modal-lottery-lose" class="hidden bg-white w-full max-w-xs rounded-2xl p-6 shadow-xl flex-col items-center fade-in">
+                <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                    <i data-lucide="smile" class="w-9 h-9 text-gray-400"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2 text-center">谢谢参与</h3>
+                <p class="text-gray-600 text-center mb-6 leading-relaxed">
+                    这次差一点<br>换个手气再来一次
+                </p>
+                <button onclick="startLottery()" class="w-full bg-purple-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-purple-100 mb-3">再抽一次</button>
+                <button onclick="closeModal()" class="w-full bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200">先不抽了</button>
             </div>
 
             <!-- 弹窗: 竞猜规则 -->
@@ -304,6 +330,8 @@
         let currentDateTab = '6.1日';
         const dates = ['6.1日', '6.2日', '6.3日'];
         const lotteryCost = 50;
+        const lotteryWinRate = 0.35;
+        let currentLotteryPrize = null;
         let currentLotteryNoticeIndex = 0;
         const lotteryPrizes = [
             { name: '百岁山运动水壶', tag: '热门', themeClass: 'from-sky-400 to-cyan-500', icon: 'trophy' },
@@ -351,6 +379,8 @@
         const modalPredict = document.getElementById('modal-predict');
         const modalSuccess = document.getElementById('modal-success');
         const modalFail = document.getElementById('modal-fail');
+        const modalLotteryWin = document.getElementById('modal-lottery-win');
+        const modalLotteryLose = document.getElementById('modal-lottery-lose');
         const modalRules = document.getElementById('modal-rules');
         const modalHistory = document.getElementById('modal-history');
         const modalTasks = document.getElementById('modal-tasks');
@@ -363,6 +393,7 @@
         const lotteryPrizeList = document.getElementById('lottery-prize-list');
         const lotteryNoticeText = document.getElementById('lottery-notice-text');
         const lotteryCostText = document.getElementById('lottery-cost-text');
+        const lotteryWinPrize = document.getElementById('lottery-win-prize');
 
         // --- 初始化渲染 ---
         function init() {
@@ -547,6 +578,40 @@
             }, 2400);
         }
 
+        function startLottery() {
+            if (currentPoints < lotteryCost) {
+                closeModal();
+                showMessage('积分不足，先去完成任务赚积分吧');
+                return;
+            }
+
+            currentPoints -= lotteryCost;
+            updatePointsDisplay();
+
+            const isWin = Math.random() < lotteryWinRate;
+            if (isWin) {
+                currentLotteryPrize = pickLotteryPrize();
+                renderLotteryWinModal();
+                showModal('lottery-win');
+            } else {
+                showModal('lottery-lose');
+            }
+        }
+
+        function pickLotteryPrize() {
+            const randomIndex = Math.floor(Math.random() * lotteryPrizes.length);
+            return lotteryPrizes[randomIndex];
+        }
+
+        function renderLotteryWinModal() {
+            if (!currentLotteryPrize) return;
+
+            lotteryWinPrize.innerHTML = `
+                <p class="text-xs font-semibold text-yellow-600 mb-1">${currentLotteryPrize.tag}</p>
+                <p class="text-lg font-bold text-gray-800">${currentLotteryPrize.name}</p>
+            `;
+        }
+
         function getResultText(match) {
             if (!match.guess) return '未参与';
             if (match.result === 'win') return '已猜中';
@@ -725,6 +790,10 @@
             modalSuccess.classList.remove('flex');
             modalFail.classList.add('hidden');
             modalFail.classList.remove('flex');
+            modalLotteryWin.classList.add('hidden');
+            modalLotteryWin.classList.remove('flex');
+            modalLotteryLose.classList.add('hidden');
+            modalLotteryLose.classList.remove('flex');
             modalRules.classList.add('hidden');
             modalRules.classList.remove('flex');
             modalHistory.classList.add('hidden');
@@ -741,6 +810,12 @@
             } else if (type === 'fail') {
                 modalFail.classList.remove('hidden');
                 modalFail.classList.add('flex');
+            } else if (type === 'lottery-win') {
+                modalLotteryWin.classList.remove('hidden');
+                modalLotteryWin.classList.add('flex');
+            } else if (type === 'lottery-lose') {
+                modalLotteryLose.classList.remove('hidden');
+                modalLotteryLose.classList.add('flex');
             } else if (type === 'rules') {
                 modalRules.classList.remove('hidden');
             } else if (type === 'history') {
