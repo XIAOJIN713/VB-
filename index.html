@@ -115,7 +115,6 @@
                     <div class="mb-4">
                         <div class="flex items-center justify-between mb-2">
                             <p class="text-sm font-semibold text-gray-800">热门奖品预览</p>
-                            <span class="text-xs text-gray-400">左右滑动查看</span>
                         </div>
                         <div id="lottery-prize-list" class="flex gap-3 overflow-x-auto no-scrollbar pb-1">
                             <!-- 抽奖奖品动态注入 -->
@@ -156,7 +155,13 @@
         </div>
 
         <!-- 3. 弹窗遮罩层 (默认隐藏) -->
-        <div id="modal-overlay" class="hidden absolute inset-0 bg-black/60 items-center justify-center z-50 p-4">
+        <!-- 我的奖品悬浮入口：正式版本复用已有我的奖品组件 -->
+        <button onclick="showMessage('这里复用我的奖品组件')" class="absolute right-4 bottom-6 z-40 bg-white text-blue-600 border border-blue-100 rounded-full px-4 py-2 shadow-lg shadow-blue-100 flex items-center gap-2 text-sm font-bold active:scale-95 transition-transform">
+            <i data-lucide="gift" class="w-4 h-4"></i>
+            <span>我的奖品</span>
+        </button>
+
+        <div id="modal-overlay" onclick="handleOverlayClick(event)" class="hidden absolute inset-0 bg-black/60 items-center justify-center z-50 p-4">
             
             <!-- 弹窗: 参与竞猜 -->
             <div id="modal-predict" class="hidden bg-white w-full max-w-sm rounded-2xl p-6 shadow-xl fade-in">
@@ -211,6 +216,25 @@
             </div>
 
             <!-- 弹窗: 抽奖中奖 -->
+            <!-- 弹窗: 连中达成奖励 -->
+            <div id="modal-streak-reward" class="hidden bg-white w-full max-w-xs rounded-2xl p-6 shadow-xl flex-col items-center fade-in">
+                <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+                    <i data-lucide="medal" class="w-9 h-9 text-blue-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">
+                    太稳了！<span id="streak-reward-threshold">3</span> 连中达成
+                </h3>
+                <div class="w-28 h-28 rounded-3xl bg-gradient-to-br from-blue-100 to-cyan-50 border border-blue-100 flex items-center justify-center mb-4 shadow-inner">
+                    <i data-lucide="package-check" class="w-14 h-14 text-blue-500"></i>
+                </div>
+                <div class="w-full bg-blue-50 border border-blue-100 rounded-xl p-4 text-center mb-4">
+                    <p class="text-sm text-blue-500 mb-1">连中挑战奖励</p>
+                    <p id="streak-reward-prize" class="text-lg font-bold text-blue-700">水瓶挂件</p>
+                </div>
+                <p id="streak-reward-desc" class="text-sm text-gray-500 text-center mb-6 leading-relaxed">奖励已发放至「我的奖品」</p>
+                <button onclick="closeModal()" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-100">我知道了</button>
+            </div>
+
             <div id="modal-lottery-win" class="hidden bg-white w-full max-w-xs rounded-2xl p-6 shadow-xl flex-col items-center fade-in">
                 <div class="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mb-4">
                     <i data-lucide="gift" class="w-9 h-9 text-yellow-500"></i>
@@ -228,12 +252,11 @@
                 <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
                     <i data-lucide="smile" class="w-9 h-9 text-gray-400"></i>
                 </div>
-                <h3 class="text-xl font-bold text-gray-800 mb-2 text-center">谢谢参与</h3>
+                <h3 class="text-xl font-bold text-gray-800 mb-2 text-center">很遗憾未中奖</h3>
                 <p class="text-gray-600 text-center mb-6 leading-relaxed">
-                    这次差一点<br>换个手气再来一次
+                    出差一点就中了~<br>很可惜，与大奖擦肩而过
                 </p>
-                <button onclick="startLottery()" class="w-full bg-purple-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-purple-100 mb-3">再抽一次</button>
-                <button onclick="closeModal()" class="w-full bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200">先不抽了</button>
+                <button onclick="startLottery()" class="w-full bg-purple-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-purple-100">再抽一次</button>
             </div>
 
             <!-- 弹窗: 竞猜规则 -->
@@ -331,8 +354,17 @@
         const dates = ['6.1日', '6.2日', '6.3日'];
         const lotteryCost = 50;
         const lotteryWinRate = 0.35;
+        const streakRewardConfig = {
+            enabled: true,
+            threshold: 3,
+            prizeName: '水瓶挂件',
+            description: '奖励已发放至「我的奖品」'
+        };
         let currentLotteryPrize = null;
         let currentLotteryNoticeIndex = 0;
+        let currentWinStreak = 0;
+        let hasReceivedStreakReward = false;
+        let hasWonLotteryPrize = false;
         const lotteryPrizes = [
             { name: '百岁山运动水壶', tag: '热门', themeClass: 'from-sky-400 to-cyan-500', icon: 'trophy' },
             { name: '景田定制冰箱贴', tag: '限量', themeClass: 'from-orange-400 to-amber-500', icon: 'badge-percent' },
@@ -368,6 +400,7 @@
         let currentPredictMatchId = null;
         let selectedTeamName = '';
         let currentGuessAmount = 100;
+        let currentModalType = null;
 
         // --- DOM 元素引用 ---
         const pointsDisplay = document.getElementById('user-points');
@@ -379,6 +412,7 @@
         const modalPredict = document.getElementById('modal-predict');
         const modalSuccess = document.getElementById('modal-success');
         const modalFail = document.getElementById('modal-fail');
+        const modalStreakReward = document.getElementById('modal-streak-reward');
         const modalLotteryWin = document.getElementById('modal-lottery-win');
         const modalLotteryLose = document.getElementById('modal-lottery-lose');
         const modalRules = document.getElementById('modal-rules');
@@ -394,6 +428,9 @@
         const lotteryNoticeText = document.getElementById('lottery-notice-text');
         const lotteryCostText = document.getElementById('lottery-cost-text');
         const lotteryWinPrize = document.getElementById('lottery-win-prize');
+        const streakRewardThreshold = document.getElementById('streak-reward-threshold');
+        const streakRewardPrize = document.getElementById('streak-reward-prize');
+        const streakRewardDesc = document.getElementById('streak-reward-desc');
 
         // --- 初始化渲染 ---
         function init() {
@@ -528,16 +565,12 @@
             lotteryPrizeList.innerHTML = lotteryPrizes.map(prize => `
                 <div class="shrink-0 w-[148px] bg-white rounded-2xl border border-white/80 shadow-sm overflow-hidden">
                     <div class="h-28 bg-gradient-to-br ${prize.themeClass} p-3 flex items-center justify-center relative">
-                        <div class="absolute top-3 left-3 text-[10px] font-semibold text-white/90 bg-white/15 border border-white/20 rounded-full px-2 py-1">
-                            ${prize.tag}
-                        </div>
                         <div class="w-20 h-20 rounded-2xl bg-white/15 border border-white/25 backdrop-blur-sm flex items-center justify-center">
                             <i data-lucide="${prize.icon}" class="w-9 h-9 text-white"></i>
                         </div>
                     </div>
                     <div class="p-3">
                         <p class="text-sm font-semibold text-gray-800 leading-5">${prize.name}</p>
-                        <p class="text-xs text-gray-400 mt-1">${prize.tag}</p>
                     </div>
                 </div>
             `).join('');
@@ -579,9 +612,15 @@
         }
 
         function startLottery() {
+            if (hasWonLotteryPrize) {
+                closeModal();
+                showMessage('本次活动每人最多中奖 1 次');
+                return;
+            }
+
             if (currentPoints < lotteryCost) {
                 closeModal();
-                showMessage('积分不足，先去完成任务赚积分吧');
+                showMessage('当前积分不足');
                 return;
             }
 
@@ -590,6 +629,7 @@
 
             const isWin = Math.random() < lotteryWinRate;
             if (isWin) {
+                hasWonLotteryPrize = true;
                 currentLotteryPrize = pickLotteryPrize();
                 renderLotteryWinModal();
                 showModal('lottery-win');
@@ -610,6 +650,30 @@
                 <p class="text-xs font-semibold text-yellow-600 mb-1">${currentLotteryPrize.tag}</p>
                 <p class="text-lg font-bold text-gray-800">${currentLotteryPrize.name}</p>
             `;
+        }
+
+        function renderStreakRewardModal() {
+            streakRewardThreshold.textContent = streakRewardConfig.threshold;
+            streakRewardPrize.textContent = streakRewardConfig.prizeName;
+            streakRewardDesc.textContent = streakRewardConfig.description;
+        }
+
+        function updateStreakReward(isWin) {
+            if (!streakRewardConfig.enabled || hasReceivedStreakReward) return false;
+
+            if (!isWin) {
+                currentWinStreak = 0;
+                return false;
+            }
+
+            currentWinStreak += 1;
+            if (currentWinStreak >= streakRewardConfig.threshold) {
+                hasReceivedStreakReward = true;
+                renderStreakRewardModal();
+                return true;
+            }
+
+            return false;
         }
 
         function getResultText(match) {
@@ -762,6 +826,11 @@
         // --- 交互逻辑: 模拟结果 ---
         function simulateResult(matchId, isWin) {
             const match = matchesData.find(item => item.id === matchId);
+            if (match && match.result) {
+                showMessage('本场已结算，不能重复模拟');
+                return;
+            }
+
             if (match) {
                 match.result = isWin ? 'win' : 'lose';
             }
@@ -771,8 +840,13 @@
                 if (isWin) {
                     currentPoints += 200; // 模拟赢回本金和奖励
                     updatePointsDisplay();
-                    showModal('success');
+                    if (updateStreakReward(true)) {
+                        showModal('streak-reward');
+                    } else {
+                        showModal('success');
+                    }
                 } else {
+                    updateStreakReward(false);
                     showModal('fail');
                 }
             }, 300);
@@ -780,6 +854,7 @@
 
         // --- 弹窗基础控制 ---
         function showModal(type) {
+            currentModalType = type;
             modalOverlay.classList.remove('hidden');
             modalOverlay.classList.add('flex');
             
@@ -790,6 +865,8 @@
             modalSuccess.classList.remove('flex');
             modalFail.classList.add('hidden');
             modalFail.classList.remove('flex');
+            modalStreakReward.classList.add('hidden');
+            modalStreakReward.classList.remove('flex');
             modalLotteryWin.classList.add('hidden');
             modalLotteryWin.classList.remove('flex');
             modalLotteryLose.classList.add('hidden');
@@ -810,6 +887,9 @@
             } else if (type === 'fail') {
                 modalFail.classList.remove('hidden');
                 modalFail.classList.add('flex');
+            } else if (type === 'streak-reward') {
+                modalStreakReward.classList.remove('hidden');
+                modalStreakReward.classList.add('flex');
             } else if (type === 'lottery-win') {
                 modalLotteryWin.classList.remove('hidden');
                 modalLotteryWin.classList.add('flex');
@@ -828,8 +908,15 @@
         }
 
         function closeModal() {
+            currentModalType = null;
             modalOverlay.classList.add('hidden');
             modalOverlay.classList.remove('flex');
+        }
+
+        function handleOverlayClick(event) {
+            if (currentModalType === 'lottery-lose' && event.target === modalOverlay) {
+                closeModal();
+            }
         }
 
         // 启动应用
