@@ -18,6 +18,11 @@
         .form-input { width: 100%; border: 1px solid #dbe3ef; border-radius: 8px; padding: 9px 11px; font-size: 14px; outline: none; background: #fff; }
         .form-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, .12); }
         .badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 3px 9px; font-size: 12px; font-weight: 600; }
+        .display-switch { display: inline-flex; align-items: center; gap: 8px; padding: 2px; border-radius: 999px; cursor: pointer; }
+        .display-switch:hover { background: #f8fafc; }
+        .switch-track { position: relative; width: 34px; height: 18px; border-radius: 999px; transition: background-color .18s ease; }
+        .switch-thumb { position: absolute; left: 2px; top: 2px; width: 14px; height: 14px; border-radius: 999px; background: #fff; box-shadow: 0 1px 3px rgba(15, 23, 42, .22); transition: transform .18s ease; }
+        .switch-text { font-size: 12px; font-weight: 600; }
         .danger-panel { border: 1px solid #fecaca; background: #fff7f7; color: #991b1b; }
         .info-panel { border: 1px solid #bfdbfe; background: #eff6ff; color: #1e3a8a; }
     </style>
@@ -37,9 +42,6 @@
             <nav class="p-3 space-y-1 text-sm">
                 <button class="nav-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left" data-target="matches">
                     <i data-lucide="calendar-days" class="w-4 h-4"></i>赛事管理
-                </button>
-                <button class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left" data-target="refunds">
-                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>取消退款
                 </button>
                 <button class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left" data-target="points">
                     <i data-lucide="coins" class="w-4 h-4"></i>积分账户
@@ -118,93 +120,91 @@
                             <tbody class="divide-y divide-slate-100">
                                 <tr>
                                     <td class="table-cell font-medium">M060101 深圳 VS 广州</td>
-                                    <td class="table-cell">2026-06-01 17:30</td>
+                                    <td class="table-cell">2026-05-31 23:59:59</td>
                                     <td class="table-cell">2026-06-01 18:00</td>
                                     <td class="table-cell"><span class="badge bg-blue-50 text-blue-700">竞猜中</span></td>
-                                    <td class="table-cell"><span class="badge bg-emerald-50 text-emerald-700">显示</span></td>
+                                    <td class="table-cell">
+                                        <button class="display-switch" onclick="toggleDisplay(this)" data-visible="true" aria-label="切换前台展示状态">
+                                            <span class="switch-track bg-emerald-500"><span class="switch-thumb translate-x-4"></span></span>
+                                            <span class="switch-text text-emerald-700">显示</span>
+                                        </button>
+                                    </td>
                                     <td class="table-cell text-right">2,418</td>
                                     <td class="table-cell text-right">362,700</td>
                                     <td class="table-cell text-right">
                                         <button class="text-blue-600 mr-3" onclick="openModal('matchDetail')">详情</button>
-                                        <button class="text-blue-600 mr-3" onclick="openModal('matchFormLocked')">编辑</button>
-                                        <button class="text-red-600" onclick="openModal('cancelMatch')">取消</button>
+                                        <button class="text-red-600" onclick="openModal('cancelMatch')">取消比赛</button>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="table-cell font-medium">M060102 湖南 VS 广州</td>
-                                    <td class="table-cell">2026-06-01 19:30</td>
+                                    <td class="table-cell">2026-05-31 23:59:59</td>
                                     <td class="table-cell">2026-06-01 20:00</td>
-                                    <td class="table-cell"><span class="badge bg-amber-50 text-amber-700">待录赛果</span></td>
-                                    <td class="table-cell"><span class="badge bg-emerald-50 text-emerald-700">显示</span></td>
+                                    <td class="table-cell"><span class="badge bg-amber-50 text-amber-700">待处理</span></td>
+                                    <td class="table-cell">
+                                        <button class="display-switch" onclick="toggleDisplay(this)" data-visible="true" aria-label="切换前台展示状态">
+                                            <span class="switch-track bg-emerald-500"><span class="switch-thumb translate-x-4"></span></span>
+                                            <span class="switch-text text-emerald-700">显示</span>
+                                        </button>
+                                    </td>
                                     <td class="table-cell text-right">1,985</td>
                                     <td class="table-cell text-right">298,600</td>
                                     <td class="table-cell text-right">
                                         <button class="text-blue-600 mr-3" onclick="openModal('matchDetail')">详情</button>
-                                        <button class="text-blue-600 mr-3" onclick="openModal('resultForm')">录赛果</button>
-                                        <button class="text-red-600" onclick="openModal('cancelMatch')">取消</button>
+                                        <button class="text-blue-600" onclick="openModal('resultForm')">录赛果</button>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="table-cell font-medium">M060201 山东 VS 广州</td>
-                                    <td class="table-cell">2026-06-02 19:30</td>
+                                    <td class="table-cell">2026-06-01 23:59:59</td>
                                     <td class="table-cell">2026-06-02 20:00</td>
-                                    <td class="table-cell"><span class="badge bg-red-50 text-red-700">结算失败</span></td>
-                                    <td class="table-cell"><span class="badge bg-emerald-50 text-emerald-700">显示</span></td>
+                                    <td class="table-cell"><span class="badge bg-emerald-50 text-emerald-700">已结束</span></td>
+                                    <td class="table-cell">
+                                        <button class="display-switch" onclick="toggleDisplay(this)" data-visible="true" aria-label="切换前台展示状态">
+                                            <span class="switch-track bg-emerald-500"><span class="switch-thumb translate-x-4"></span></span>
+                                            <span class="switch-text text-emerald-700">显示</span>
+                                        </button>
+                                    </td>
                                     <td class="table-cell text-right">1,602</td>
                                     <td class="table-cell text-right">240,300</td>
                                     <td class="table-cell text-right">
-                                        <button class="text-blue-600 mr-3" onclick="openModal('matchDetail')">详情</button>
-                                        <button class="text-blue-600" onclick="openModal('retrySettlement')">重试结算</button>
+                                        <button class="text-blue-600" onclick="openModal('matchDetail')">详情</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="table-cell font-medium">M060202 深圳 VS 湖南</td>
+                                    <td class="table-cell">2026-06-01 23:59:59</td>
+                                    <td class="table-cell">2026-06-02 19:00</td>
+                                    <td class="table-cell"><span class="badge bg-slate-100 text-slate-600">已取消</span></td>
+                                    <td class="table-cell">
+                                        <button class="display-switch" onclick="toggleDisplay(this)" data-visible="false" aria-label="切换前台展示状态">
+                                            <span class="switch-track bg-slate-300"><span class="switch-thumb translate-x-0"></span></span>
+                                            <span class="switch-text text-slate-600">隐藏</span>
+                                        </button>
+                                    </td>
+                                    <td class="table-cell text-right">126</td>
+                                    <td class="table-cell text-right">18,900</td>
+                                    <td class="table-cell text-right">
+                                        <button class="text-blue-600" onclick="openModal('matchDetail')">详情</button>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="table-cell font-medium">M060301 待公布 VS 待公布</td>
-                                    <td class="table-cell">-</td>
+                                    <td class="table-cell">2026-06-02 23:59:59</td>
                                     <td class="table-cell">2026-06-03 18:00</td>
                                     <td class="table-cell"><span class="badge bg-slate-100 text-slate-600">未开始</span></td>
-                                    <td class="table-cell"><span class="badge bg-slate-100 text-slate-600">隐藏</span></td>
+                                    <td class="table-cell">
+                                        <button class="display-switch" onclick="toggleDisplay(this)" data-visible="false" aria-label="切换前台展示状态">
+                                            <span class="switch-track bg-slate-300"><span class="switch-thumb translate-x-0"></span></span>
+                                            <span class="switch-text text-slate-600">隐藏</span>
+                                        </button>
+                                    </td>
                                     <td class="table-cell text-right">0</td>
                                     <td class="table-cell text-right">0</td>
-                                    <td class="table-cell text-right"><button class="text-blue-600" onclick="openModal('matchForm')">编辑</button></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-
-                <section id="refunds" class="section">
-                    <div class="bg-white rounded-lg border border-slate-200">
-                        <div class="p-4 border-b border-slate-200 flex items-center justify-between">
-                            <h3 class="font-bold">取消退款批次</h3>
-                            <span class="text-xs text-slate-400">只退下注本金，不发奖励</span>
-                        </div>
-                        <table class="w-full text-sm">
-                            <thead class="bg-slate-50 text-slate-500">
-                                <tr>
-                                    <th class="table-cell text-left">退款批次</th>
-                                    <th class="table-cell text-left">赛事</th>
-                                    <th class="table-cell text-left">状态</th>
-                                    <th class="table-cell text-right">应退人数</th>
-                                    <th class="table-cell text-right">应退积分</th>
-                                    <th class="table-cell text-right">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100">
-                                <tr>
-                                    <td class="table-cell font-medium">RF20260601001</td>
-                                    <td class="table-cell">深圳 VS 广州</td>
-                                    <td class="table-cell"><span class="badge bg-emerald-50 text-emerald-700">已退款</span></td>
-                                    <td class="table-cell text-right">126</td>
-                                    <td class="table-cell text-right">18,900</td>
-                                    <td class="table-cell text-right"><button class="text-blue-600" onclick="openModal('refundDetail')">明细</button></td>
-                                </tr>
-                                <tr>
-                                    <td class="table-cell font-medium">RF20260602001</td>
-                                    <td class="table-cell">湖南 VS 广州</td>
-                                    <td class="table-cell"><span class="badge bg-red-50 text-red-700">部分失败</span></td>
-                                    <td class="table-cell text-right">98</td>
-                                    <td class="table-cell text-right">12,600</td>
-                                    <td class="table-cell text-right"><button class="text-blue-600" onclick="openModal('retryRefund')">重试</button></td>
+                                    <td class="table-cell text-right">
+                                        <button class="text-blue-600 mr-3" onclick="openModal('matchForm')">编辑</button>
+                                        <button class="text-red-600" onclick="openModal('cancelMatch')">取消比赛</button>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -425,7 +425,6 @@
     <script>
         const titles = {
             matches: '赛事管理',
-            refunds: '取消退款',
             points: '积分账户',
             lottery: '抽奖配置',
             winnings: '中奖发放'
@@ -433,7 +432,6 @@
 
         const primaryActions = {
             matches: ['新增赛事', 'plus', 'matchForm'],
-            refunds: ['查看退款批次', 'rotate-ccw', 'refundDetail'],
             points: ['人工调账', 'coins', 'adjustPoints'],
             lottery: ['新增奖品', 'gift', 'prizeForm'],
             winnings: ['批量发放', 'package-check', 'batchShip']
@@ -442,17 +440,16 @@
         const modals = {
             matchForm: {
                 title: '新增 / 编辑赛事',
-                subtitle: '配置比赛基础信息、竞猜时间和前台展示',
+                subtitle: '配置比赛基础信息和前台展示',
                 confirm: '保存赛事',
                 body: `
                     <div class="grid grid-cols-2 gap-4">
                         <label><span class="form-label">队伍 A</span><input class="form-input" value="深圳"></label>
                         <label><span class="form-label">队伍 B</span><input class="form-input" value="广州"></label>
                         <label><span class="form-label">比赛开始时间</span><input type="datetime-local" class="form-input" value="2026-06-01T18:00"></label>
-                        <label><span class="form-label">竞猜截止时间</span><input type="datetime-local" class="form-input" value="2026-06-01T17:30"></label>
                         <label><span class="form-label">前台展示</span><select class="form-input"><option>显示</option><option>隐藏</option></select></label>
                     </div>
-                    <div class="mt-4 rounded-lg info-panel p-3">下注门槛、奖励规则、连中奖励等统一在“活动规则配置”中管理。</div>
+                    <div class="mt-4 rounded-lg info-panel p-3">竞猜截止时间自动为比赛开始时间的日期前一日 23:59:59。例如比赛开始时间为 2026-06-02 18:00，则竞猜截止时间为 2026-06-01 23:59:59。</div>
                 `
             },
             matchFormLocked: {
@@ -460,45 +457,54 @@
                 subtitle: '已有下注后限制修改关键字段',
                 confirm: '保存非关键字段',
                 body: `
-                    <div class="rounded-lg danger-panel p-3 mb-4">当前赛事已有 2,418 人下注，仅可修改前台展示和前台备注；队伍、比赛时间、竞猜截止时间等影响下注和结算口径的字段不可修改。</div>
+                    <div class="rounded-lg danger-panel p-3 mb-4">当前赛事已有 2,418 人下注，仅可修改前台展示；队伍、比赛开始时间等影响下注和结算口径的字段不可修改。</div>
                     <div class="grid grid-cols-2 gap-4">
                         <label><span class="form-label">队伍 A</span><input class="form-input bg-slate-50" value="深圳" disabled></label>
                         <label><span class="form-label">队伍 B</span><input class="form-input bg-slate-50" value="广州" disabled></label>
                         <label><span class="form-label">比赛开始时间</span><input class="form-input bg-slate-50" value="2026-06-01 18:00" disabled></label>
-                        <label><span class="form-label">竞猜截止时间</span><input class="form-input bg-slate-50" value="2026-06-01 17:30" disabled></label>
                         <label><span class="form-label">前台展示</span><select class="form-input"><option>显示</option><option>隐藏</option></select></label>
-                        <label><span class="form-label">前台展示备注</span><input class="form-input" value="竞猜进行中"></label>
                     </div>
-                    <div class="mt-4 rounded-lg info-panel p-3">隐藏只影响 H5 是否展示入口，不影响已下注订单、赛果录入和后续结算。</div>
+                    <div class="mt-4 rounded-lg info-panel p-3">竞猜截止时间由比赛开始时间自动计算；隐藏只影响 H5 是否展示入口，不影响已下注订单、赛果录入和后续结算。</div>
                 `
             },
             matchDetail: {
                 title: '赛事详情',
-                subtitle: '查看参与数据、赛果和结算状态',
+                subtitle: '查看赛事基础信息、参与数据和赛果信息',
                 confirm: '关闭',
                 body: `
-                    <div class="grid grid-cols-4 gap-3 mb-4">
-                        <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">参与人数</p><b class="text-xl">2,418</b></div>
-                        <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">投入积分</p><b class="text-xl">362,700</b></div>
-                        <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">支持深圳</p><b class="text-xl">58%</b></div>
-                        <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">支持广州</p><b class="text-xl">42%</b></div>
+                    <div class="mb-5">
+                        <h4 class="font-bold mb-3">基础信息区</h4>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">赛事 ID</p><b>M060101</b></div>
+                            <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">对阵双方</p><b>深圳 VS 广州</b></div>
+                            <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">比赛开始时间</p><b>2026-06-01 18:00</b></div>
+                            <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">竞猜截止时间</p><b>2026-05-31 23:59:59</b></div>
+                            <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">前台展示</p><b>显示</b></div>
+                            <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">当前状态</p><b>竞猜中</b></div>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-4 gap-3 mb-4">
-                        <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">赛果</p><b>未录入</b></div>
-                        <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">结算状态</p><b>未结算</b></div>
-                        <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">成功 / 失败</p><b>-</b></div>
-                        <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">失败原因</p><b>暂无</b></div>
+                    <div class="mb-5">
+                        <h4 class="font-bold mb-3">参与数据区</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">参与人数</p><b class="text-xl">2,418</b></div>
+                            <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">投入积分</p><b class="text-xl">362,700</b></div>
+                        </div>
                     </div>
-                    <table class="w-full text-sm">
-                        <thead class="bg-slate-50 text-slate-500"><tr><th class="table-cell text-left">用户</th><th class="table-cell text-left">支持队伍</th><th class="table-cell text-right">下注积分</th><th class="table-cell text-left">下注时间</th></tr></thead>
-                        <tbody><tr><td class="table-cell">王敏</td><td class="table-cell">深圳</td><td class="table-cell text-right">100</td><td class="table-cell">2026-06-01 10:21</td></tr></tbody>
-                    </table>
+                    <div>
+                        <h4 class="font-bold mb-3">赛果区 <span class="text-xs font-normal text-slate-400">仅已结束状态展示</span></h4>
+                        <div class="grid grid-cols-4 gap-3">
+                            <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">胜出队伍</p><b>广州</b></div>
+                            <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">猜中人数</p><b>1,120</b></div>
+                            <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">猜错人数</p><b>865</b></div>
+                            <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">发放奖励积分</p><b>168,400</b></div>
+                        </div>
+                    </div>
                 `
             },
             cancelMatch: {
-                title: '取消比赛确认',
-                subtitle: '取消后将触发全额退款流程',
-                confirm: '确认取消并创建退款',
+                title: '取消比赛并退款确认',
+                subtitle: '取消比赛后将为已下注用户创建退款处理',
+                confirm: '确认取消并退款',
                 danger: true,
                 body: `
                     <div class="rounded-lg danger-panel p-4 mb-4">
@@ -510,7 +516,7 @@
                         <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">应退积分</p><b class="text-xl">362,700</b></div>
                         <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">退款规则</p><b class="text-xl">本金全退</b></div>
                     </div>
-                    <label><span class="form-label">取消原因</span><textarea class="form-input" rows="3" placeholder="请输入取消原因，便于后续追溯"></textarea></label>
+                    <div class="rounded-lg info-panel p-3">确认后赛事状态变更为已取消，系统开始处理退款；退款失败由后端自动处理，不单独提供运营弹窗。</div>
                 `
             },
             resultForm: {
@@ -522,54 +528,7 @@
                         <label><span class="form-label">赛事</span><input class="form-input bg-slate-50" value="湖南 VS 广州" disabled></label>
                         <label><span class="form-label">胜出队伍</span><select class="form-input"><option>湖南</option><option selected>广州</option></select></label>
                     </div>
-                    <div class="grid grid-cols-4 gap-3">
-                        <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">猜中人数</p><b>1,120</b></div>
-                        <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">猜错人数</p><b>865</b></div>
-                        <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">预计发放奖励积分</p><b>168,400</b></div>
-                        <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">预计收回积分</p><b>130,200</b></div>
-                    </div>
-                    <div class="mt-4 rounded-lg info-panel p-3">猜中用户返还下注本金并发放等额奖励；猜错用户下注积分不返还，计入预计收回积分。</div>
-                `
-            },
-            retrySettlement: {
-                title: '幂等重试结算',
-                subtitle: '仅处理失败或未完成记录',
-                confirm: '开始重试',
-                body: `
-                    <div class="grid grid-cols-3 gap-3 mb-4">
-                        <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">成功</p><b>1,598</b></div>
-                        <div class="p-3 bg-red-50 rounded-lg"><p class="text-red-600">失败</p><b class="text-red-700">4</b></div>
-                        <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">重试次数</p><b>1</b></div>
-                    </div>
-                    <table class="w-full text-sm">
-                        <thead class="bg-slate-50 text-slate-500"><tr><th class="table-cell text-left">用户</th><th class="table-cell text-left">失败原因</th><th class="table-cell text-left">处理策略</th></tr></thead>
-                        <tbody><tr><td class="table-cell">U10089</td><td class="table-cell">积分流水写入超时</td><td class="table-cell">重试流水写入</td></tr></tbody>
-                    </table>
-                `
-            },
-            refundDetail: {
-                title: '退款批次详情',
-                subtitle: '退款必须关联原下注流水',
-                confirm: '关闭',
-                body: `
-                    <div class="grid grid-cols-3 gap-3 mb-4">
-                        <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">应退人数</p><b>126</b></div>
-                        <div class="p-3 bg-slate-50 rounded-lg"><p class="text-slate-500">应退积分</p><b>18,900</b></div>
-                        <div class="p-3 bg-emerald-50 rounded-lg"><p class="text-emerald-700">状态</p><b>已退款</b></div>
-                    </div>
-                    <table class="w-full text-sm">
-                        <thead class="bg-slate-50 text-slate-500"><tr><th class="table-cell text-left">用户</th><th class="table-cell text-right">下注积分</th><th class="table-cell text-left">原下注流水</th><th class="table-cell text-left">退款流水</th></tr></thead>
-                        <tbody><tr><td class="table-cell">王敏</td><td class="table-cell text-right">100</td><td class="table-cell">PL202606010001</td><td class="table-cell">PL202606020088</td></tr></tbody>
-                    </table>
-                `
-            },
-            retryRefund: {
-                title: '幂等重试退款',
-                subtitle: '仅处理退款失败记录',
-                confirm: '开始重试',
-                body: `
-                    <div class="rounded-lg info-panel p-3 mb-4">已退款用户不会重复退分。本次重试仅处理 3 条失败明细。</div>
-                    <label><span class="form-label">重试备注</span><textarea class="form-input" rows="3" placeholder="可填写客服或运营处理说明"></textarea></label>
+                    <div class="rounded-lg info-panel p-3">猜中用户返还下注本金并发放等额奖励；猜错用户下注积分不返还，计入预计收回积分。</div>
                 `
             },
             adjustPoints: {
@@ -592,13 +551,21 @@
                 subtitle: '活动维度规则统一配置',
                 confirm: '保存配置',
                 body: `
+                    <div class="mb-5 grid grid-cols-2 gap-3">
+                        <div class="rounded-lg info-panel p-3">
+                            <p class="font-semibold text-blue-800">奖励规则</p>
+                            <p class="mt-1 text-sm">猜中返还下注本金 + 等额奖励。</p>
+                        </div>
+                        <div class="rounded-lg info-panel p-3">
+                            <p class="font-semibold text-blue-800">同场下注限制</p>
+                            <p class="mt-1 text-sm">同一用户同一比赛只能下注一次。</p>
+                        </div>
+                    </div>
                     <div class="mb-5">
                         <h4 class="font-bold mb-3">竞猜规则</h4>
                         <div class="grid grid-cols-2 gap-4">
                             <label><span class="form-label">最小下注积分</span><input type="number" min="1" step="1" class="form-input" value="10"></label>
                             <label><span class="form-label">单场最大下注上限</span><input type="number" min="10" step="1" class="form-input" placeholder="不填则不超过用户可用积分"></label>
-                            <label><span class="form-label">奖励规则</span><input class="form-input bg-slate-50" value="猜中返还本金 + 等额奖励" disabled></label>
-                            <label><span class="form-label">同场下注限制</span><input class="form-input bg-slate-50" value="同一用户同一比赛只能下注一次" disabled></label>
                         </div>
                     </div>
                     <div>
@@ -702,6 +669,22 @@
 
         function closeModal() {
             document.getElementById('modalOverlay').classList.remove('active');
+        }
+
+        function toggleDisplay(button) {
+            const nextVisible = button.dataset.visible !== 'true';
+            const track = button.querySelector('.switch-track');
+            const thumb = button.querySelector('.switch-thumb');
+            const text = button.querySelector('.switch-text');
+
+            button.dataset.visible = String(nextVisible);
+            text.textContent = nextVisible ? '显示' : '隐藏';
+            text.classList.toggle('text-emerald-700', nextVisible);
+            text.classList.toggle('text-slate-600', !nextVisible);
+            track.classList.toggle('bg-emerald-500', nextVisible);
+            track.classList.toggle('bg-slate-300', !nextVisible);
+            thumb.classList.toggle('translate-x-4', nextVisible);
+            thumb.classList.toggle('translate-x-0', !nextVisible);
         }
 
         document.getElementById('modalOverlay').addEventListener('click', event => {

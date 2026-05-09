@@ -156,7 +156,7 @@
 
         <!-- 3. 弹窗遮罩层 (默认隐藏) -->
         <!-- 我的奖品悬浮入口：正式版本复用已有我的奖品组件 -->
-        <button onclick="showMessage('这里复用我的奖品组件')" class="absolute right-4 bottom-6 z-40 bg-white text-blue-600 border border-blue-100 rounded-full px-4 py-2 shadow-lg shadow-blue-100 flex items-center gap-2 text-sm font-bold active:scale-95 transition-transform">
+        <button onclick="openMyPrizesModal()" class="absolute right-4 bottom-6 z-40 bg-white text-blue-600 border border-blue-100 rounded-full px-4 py-2 shadow-lg shadow-blue-100 flex items-center gap-2 text-sm font-bold active:scale-95 transition-transform">
             <i data-lucide="gift" class="w-4 h-4"></i>
             <span>我的奖品</span>
         </button>
@@ -183,36 +183,26 @@
                 <div class="mb-6">
                     <p class="text-sm text-gray-600 mb-2 text-center">投入积分</p>
                     <div class="flex items-center justify-center space-x-3">
-                        <button onclick="adjustAmount(-10)" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xl text-gray-600 hover:bg-gray-200">-</button>
-                        <input type="number" id="input-amount" value="100" class="w-24 text-center text-xl font-bold border-b-2 border-gray-300 focus:border-blue-500 outline-none pb-1" onchange="validateAmount(this.value)">
-                        <button onclick="adjustAmount(10)" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xl text-gray-600 hover:bg-gray-200">+</button>
+                        <button id="btn-amount-minus" onclick="adjustAmount(-minBet)" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xl text-gray-600 hover:bg-gray-200">-</button>
+                        <input type="text" id="input-amount" value="10" readonly class="w-24 text-center text-xl font-bold border-b-2 border-gray-300 outline-none pb-1 bg-transparent cursor-default">
+                        <button id="btn-amount-plus" onclick="adjustAmount(minBet)" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xl text-gray-600 hover:bg-gray-200">+</button>
                     </div>
                     <p class="text-xs text-gray-400 text-center mt-2">当前余额: <span id="modal-balance">500</span> 积分</p>
                 </div>
 
-                <button onclick="confirmGuess()" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl hover:bg-blue-600 active:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30">
+                <button id="btn-confirm-guess" onclick="confirmGuess()" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl hover:bg-blue-600 active:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30">
                     确认投入
                 </button>
             </div>
 
-            <!-- 弹窗: 猜对通知 -->
-            <div id="modal-success" class="hidden bg-white w-full max-w-xs rounded-2xl p-6 shadow-xl flex-col items-center fade-in">
-                <i data-lucide="check-circle-2" class="w-16 h-16 text-green-500 mb-4 mx-auto"></i>
-                <h3 class="text-xl font-bold text-gray-800 mb-2 text-center">通知</h3>
+            <!-- 弹窗: 竞猜结果通知 -->
+            <div id="modal-result-notice" class="hidden bg-white w-full max-w-xs rounded-2xl p-6 shadow-xl flex-col items-center fade-in">
+                <i data-lucide="bell-ring" class="w-16 h-16 text-blue-500 mb-4 mx-auto"></i>
+                <h3 class="text-xl font-bold text-gray-800 mb-2 text-center">竞猜结果已出</h3>
                 <p class="text-gray-600 text-center mb-6 leading-relaxed">
-                    恭喜您猜对了！<br>总共获得 <span class="text-yellow-500 font-bold text-lg">200</span> 积分
+                    您参与的竞猜已有结果<br>具体结果和积分变化可前往<br>「我的竞猜记录」查看
                 </p>
-                <button onclick="closeModal()" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl">开心收下</button>
-            </div>
-
-            <!-- 弹窗: 猜错通知 -->
-            <div id="modal-fail" class="hidden bg-white w-full max-w-xs rounded-2xl p-6 shadow-xl flex-col items-center fade-in">
-                <i data-lucide="x-circle" class="w-16 h-16 text-red-500 mb-4 mx-auto"></i>
-                <h3 class="text-xl font-bold text-gray-800 mb-2 text-center">通知</h3>
-                <p class="text-gray-600 text-center mb-6">
-                    很遗憾猜错了<br>再接再厉哦！
-                </p>
-                <button onclick="closeModal()" class="w-full bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200">我知道了</button>
+                <button onclick="openHistoryModal()" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl">查看竞猜记录</button>
             </div>
 
             <!-- 弹窗: 抽奖中奖 -->
@@ -257,6 +247,19 @@
                     出差一点就中了~<br>很可惜，与大奖擦肩而过
                 </p>
                 <button onclick="startLottery()" class="w-full bg-purple-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-purple-100">再抽一次</button>
+            </div>
+
+            <!-- 弹窗: 我的奖品 -->
+            <div id="modal-my-prizes" class="hidden bg-white w-full max-w-sm rounded-2xl p-6 shadow-xl fade-in">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-800">我的奖品</h3>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                        <i data-lucide="x-circle" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                <div id="my-prize-list" class="space-y-3 max-h-[360px] overflow-y-auto">
+                    <!-- 奖品/奖励记录动态注入 -->
+                </div>
             </div>
 
             <!-- 弹窗: 竞猜规则 -->
@@ -350,8 +353,9 @@
 
         // --- 全局状态 ---
         let currentPoints = 500;
-        let currentDateTab = '6.1日';
-        const dates = ['6.1日', '6.2日', '6.3日'];
+        let currentDateTab = '';
+        const minBet = 10;
+        const maxBetLimit = 100;
         const lotteryCost = 50;
         const lotteryWinRate = 0.35;
         const streakRewardConfig = {
@@ -365,6 +369,10 @@
         let currentWinStreak = 0;
         let hasReceivedStreakReward = false;
         let hasWonLotteryPrize = false;
+        let myPrizeRecords = [
+            { source: '抽奖中奖', name: '百岁山运动水壶', time: '2026-06-01 12:30', status: '待发放' },
+            { source: '连中奖励', name: '水瓶挂件', time: '2026-06-02 21:00', status: '待发放' },
+        ];
         const lotteryPrizes = [
             { name: '百岁山运动水壶', tag: '热门', themeClass: 'from-sky-400 to-cyan-500', icon: 'trophy' },
             { name: '景田定制冰箱贴', tag: '限量', themeClass: 'from-orange-400 to-amber-500', icon: 'badge-percent' },
@@ -388,11 +396,11 @@
         
         // 模拟赛事数据
         let matchesData = [
-            { id: 1, date: '6.1日', teamA: '深圳', teamB: '广州', status: 'available', guess: null, result: null },
-            { id: 2, date: '6.1日', teamA: '湖南', teamB: '广州', status: 'available', guess: null, result: null },
-            { id: 3, date: '6.1日', teamA: '山东', teamB: '广州', status: 'available', guess: null, result: null },
-            { id: 4, date: '6.2日', teamA: '深圳', teamB: '广州', status: 'available', guess: null, result: null },
-            { id: 5, date: '6.2日', teamA: '湖南', teamB: '广州', status: 'available', guess: null, result: null },
+            { id: 1, date: '6.1日', startTime: '2026-06-01 18:00', teamA: '深圳', teamB: '广州', status: 'available', guess: null, result: null },
+            { id: 2, date: '6.1日', startTime: '2026-06-01 20:00', teamA: '湖南', teamB: '广州', status: 'available', guess: null, result: null },
+            { id: 3, date: '6.1日', startTime: '2026-06-01 21:00', teamA: '山东', teamB: '广州', status: 'available', guess: null, result: null },
+            { id: 4, date: '6.2日', startTime: '2026-06-02 18:00', teamA: '深圳', teamB: '广州', status: 'closed', guess: null, result: null },
+            { id: 5, date: '6.2日', startTime: '2026-06-02 20:00', teamA: '湖南', teamB: '广州', status: 'cancelled', guess: null, result: 'cancelled' },
             { id: 6, date: '6.3日', teamA: '待公布', teamB: '待公布', status: 'locked', guess: null, result: null },
         ];
 
@@ -410,8 +418,7 @@
         
         const modalOverlay = document.getElementById('modal-overlay');
         const modalPredict = document.getElementById('modal-predict');
-        const modalSuccess = document.getElementById('modal-success');
-        const modalFail = document.getElementById('modal-fail');
+        const modalResultNotice = document.getElementById('modal-result-notice');
         const modalStreakReward = document.getElementById('modal-streak-reward');
         const modalLotteryWin = document.getElementById('modal-lottery-win');
         const modalLotteryLose = document.getElementById('modal-lottery-lose');
@@ -422,12 +429,17 @@
         const btnTeamA = document.getElementById('btn-team-a');
         const btnTeamB = document.getElementById('btn-team-b');
         const inputAmount = document.getElementById('input-amount');
+        const btnAmountMinus = document.getElementById('btn-amount-minus');
+        const btnAmountPlus = document.getElementById('btn-amount-plus');
+        const btnConfirmGuess = document.getElementById('btn-confirm-guess');
         const historyList = document.getElementById('history-list');
         const tasksList = document.getElementById('tasks-list');
         const lotteryPrizeList = document.getElementById('lottery-prize-list');
         const lotteryNoticeText = document.getElementById('lottery-notice-text');
         const lotteryCostText = document.getElementById('lottery-cost-text');
         const lotteryWinPrize = document.getElementById('lottery-win-prize');
+        const myPrizeList = document.getElementById('my-prize-list');
+        const modalMyPrizes = document.getElementById('modal-my-prizes');
         const streakRewardThreshold = document.getElementById('streak-reward-threshold');
         const streakRewardPrize = document.getElementById('streak-reward-prize');
         const streakRewardDesc = document.getElementById('streak-reward-desc');
@@ -448,6 +460,15 @@
         }
 
         function renderDateTabs() {
+            const dates = [...new Set(matchesData.filter(match => match.status !== 'locked').map(match => match.date))];
+            if (!dates.length) {
+                currentDateTab = '';
+                dateTabsContainer.innerHTML = '';
+                return;
+            }
+            if (!currentDateTab || !dates.includes(currentDateTab)) {
+                currentDateTab = dates[0];
+            }
             dateTabsContainer.innerHTML = dates.map(date => `
                 <button onclick="switchDate('${date}')" class="flex-1 py-2 px-4 rounded-lg font-medium whitespace-nowrap transition-colors ${
                     currentDateTab === date 
@@ -467,9 +488,27 @@
 
         function renderMatches() {
             const filteredMatches = matchesData.filter(m => m.date === currentDateTab);
+
+            if (!filteredMatches.length) {
+                matchListContainer.innerHTML = `
+                    <div class="bg-white rounded-xl p-8 text-center border border-dashed border-gray-200">
+                        <i data-lucide="calendar-x" class="w-10 h-10 text-gray-300 mx-auto mb-3"></i>
+                        <p class="text-sm font-semibold text-gray-500">暂无赛事安排</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
             
-            matchListContainer.innerHTML = filteredMatches.map(match => {
+            const sortedMatches = [...filteredMatches].sort((a, b) => {
+                const order = { available: 1, closed: 1, locked: 1, pending: 2, settled: 3, cancelled: 4 };
+                return (order[a.status] || 9) - (order[b.status] || 9) || (a.startTime || '').localeCompare(b.startTime || '');
+            });
+
+            matchListContainer.innerHTML = sortedMatches.map(match => {
                 const isLocked = match.status === 'locked';
+                const isClosed = match.status === 'closed';
+                const isCancelled = match.status === 'cancelled';
                 const hasGuessed = match.guess !== null;
                 const resultText = getResultText(match);
                 
@@ -477,6 +516,10 @@
                 let statusHtml = '';
                 if (isLocked) {
                     statusHtml = `<span class="text-sm text-gray-400">敬请期待</span>`;
+                } else if (isCancelled) {
+                    statusHtml = `<span class="text-sm text-gray-500 font-medium">比赛取消，积分已退回</span>`;
+                } else if (isClosed && !hasGuessed) {
+                    statusHtml = `<span class="text-sm text-gray-400 font-medium">竞猜已截止</span>`;
                 } else if (hasGuessed) {
                     statusHtml = `
                         <div class="flex flex-col items-center">
@@ -631,6 +674,12 @@
             if (isWin) {
                 hasWonLotteryPrize = true;
                 currentLotteryPrize = pickLotteryPrize();
+                myPrizeRecords.unshift({
+                    source: '抽奖中奖',
+                    name: currentLotteryPrize.name,
+                    time: '刚刚',
+                    status: '待发放'
+                });
                 renderLotteryWinModal();
                 showModal('lottery-win');
             } else {
@@ -669,6 +718,12 @@
             currentWinStreak += 1;
             if (currentWinStreak >= streakRewardConfig.threshold) {
                 hasReceivedStreakReward = true;
+                myPrizeRecords.unshift({
+                    source: '连中奖励',
+                    name: streakRewardConfig.prizeName,
+                    time: '刚刚',
+                    status: '待发放'
+                });
                 renderStreakRewardModal();
                 return true;
             }
@@ -677,6 +732,7 @@
         }
 
         function getResultText(match) {
+            if (match.status === 'cancelled' || match.result === 'cancelled') return '已取消，积分已退回';
             if (!match.guess) return '未参与';
             if (match.result === 'win') return '已猜中';
             if (match.result === 'lose') return '已猜错';
@@ -684,9 +740,40 @@
         }
 
         function getHistoryBadgeClass(match) {
+            if (match.status === 'cancelled' || match.result === 'cancelled') return 'bg-gray-100 text-gray-500';
             if (match.result === 'win') return 'bg-green-100 text-green-600';
             if (match.result === 'lose') return 'bg-red-100 text-red-600';
             return 'bg-yellow-100 text-yellow-600';
+        }
+
+        function renderMyPrizes() {
+            if (!myPrizeRecords.length) {
+                myPrizeList.innerHTML = `
+                    <div class="bg-gray-50 border border-dashed border-gray-200 rounded-xl px-4 py-8 text-center">
+                        <i data-lucide="gift" class="w-10 h-10 text-gray-300 mx-auto mb-3"></i>
+                        <p class="text-sm font-medium text-gray-500">暂无奖品记录</p>
+                    </div>
+                `;
+                return;
+            }
+
+            myPrizeList.innerHTML = myPrizeRecords.map(record => `
+                <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-xs text-blue-500 font-medium">${record.source}</p>
+                            <p class="text-base font-bold text-gray-800 mt-1">${record.name}</p>
+                            <p class="text-xs text-gray-400 mt-1">${record.time}</p>
+                        </div>
+                        <span class="text-xs px-2 py-1 rounded-full bg-white text-blue-600 border border-blue-100">${record.status}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openMyPrizesModal() {
+            renderMyPrizes();
+            showModal('my-prizes');
         }
 
         function openRulesModal() {
@@ -744,6 +831,14 @@
         function openPredictModal(matchId) {
             const match = matchesData.find(m => m.id === matchId);
             if (!match || match.status === 'locked') return;
+            if (match.status === 'cancelled') {
+                showMessage('比赛取消，积分已退回');
+                return;
+            }
+            if (match.status === 'closed') {
+                showMessage('竞猜已截止');
+                return;
+            }
             if (match.guess) {
                 showMessage('您已经参与过本场竞猜了哦！');
                 return;
@@ -751,7 +846,7 @@
 
             currentPredictMatchId = match.id;
             selectedTeamName = '';
-            currentGuessAmount = 100;
+            currentGuessAmount = minBet;
             
             // 更新弹窗内容
             btnTeamA.textContent = match.teamA;
@@ -761,7 +856,7 @@
             
             // 重置UI状态
             resetTeamButtons();
-            inputAmount.value = currentGuessAmount;
+            validateAmount(currentGuessAmount);
 
             showModal('predict');
         }
@@ -798,15 +893,21 @@
 
         function validateAmount(val) {
             let num = parseInt(val);
-            if (isNaN(num) || num < 10) num = 10;
-            if (num > currentPoints) num = currentPoints; // 不能超过余额
+            const maxBet = Math.max(minBet, Math.min(maxBetLimit || currentPoints, currentPoints));
+            if (isNaN(num) || num < minBet) num = minBet;
+            if (num > maxBet) num = maxBet;
             currentGuessAmount = num;
             inputAmount.value = currentGuessAmount;
+            btnAmountMinus.disabled = currentGuessAmount <= minBet;
+            btnAmountPlus.disabled = currentGuessAmount >= maxBet;
+            btnAmountMinus.classList.toggle('opacity-40', btnAmountMinus.disabled);
+            btnAmountPlus.classList.toggle('opacity-40', btnAmountPlus.disabled);
+            btnConfirmGuess.classList.toggle('opacity-50', currentPoints < minBet);
         }
 
         function confirmGuess() {
             if (!selectedTeamName) return showMessage('请选择支持的队伍');
-            if (currentGuessAmount <= 0 || currentGuessAmount > currentPoints) return showMessage('余额不足或输入有误');
+            if (currentPoints < minBet || currentGuessAmount > currentPoints) return showMessage('当前积分不足');
 
             // 扣分
             currentPoints -= currentGuessAmount;
@@ -843,11 +944,11 @@
                     if (updateStreakReward(true)) {
                         showModal('streak-reward');
                     } else {
-                        showModal('success');
+                        showModal('result-notice');
                     }
                 } else {
                     updateStreakReward(false);
-                    showModal('fail');
+                    showModal('result-notice');
                 }
             }, 300);
         }
@@ -861,10 +962,8 @@
             // 先隐藏所有
             modalPredict.classList.add('hidden');
             modalPredict.classList.remove('flex');
-            modalSuccess.classList.add('hidden');
-            modalSuccess.classList.remove('flex');
-            modalFail.classList.add('hidden');
-            modalFail.classList.remove('flex');
+            modalResultNotice.classList.add('hidden');
+            modalResultNotice.classList.remove('flex');
             modalStreakReward.classList.add('hidden');
             modalStreakReward.classList.remove('flex');
             modalLotteryWin.classList.add('hidden');
@@ -877,16 +976,15 @@
             modalHistory.classList.remove('flex');
             modalTasks.classList.add('hidden');
             modalTasks.classList.remove('flex');
+            modalMyPrizes.classList.add('hidden');
+            modalMyPrizes.classList.remove('flex');
 
             // 显示目标
             if (type === 'predict') {
                 modalPredict.classList.remove('hidden');
-            } else if (type === 'success') {
-                modalSuccess.classList.remove('hidden');
-                modalSuccess.classList.add('flex');
-            } else if (type === 'fail') {
-                modalFail.classList.remove('hidden');
-                modalFail.classList.add('flex');
+            } else if (type === 'result-notice') {
+                modalResultNotice.classList.remove('hidden');
+                modalResultNotice.classList.add('flex');
             } else if (type === 'streak-reward') {
                 modalStreakReward.classList.remove('hidden');
                 modalStreakReward.classList.add('flex');
@@ -902,6 +1000,8 @@
                 modalHistory.classList.remove('hidden');
             } else if (type === 'tasks') {
                 modalTasks.classList.remove('hidden');
+            } else if (type === 'my-prizes') {
+                modalMyPrizes.classList.remove('hidden');
             }
 
             lucide.createIcons();
@@ -914,7 +1014,7 @@
         }
 
         function handleOverlayClick(event) {
-            if (currentModalType === 'lottery-lose' && event.target === modalOverlay) {
+            if (event.target === modalOverlay) {
                 closeModal();
             }
         }
